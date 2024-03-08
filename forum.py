@@ -32,37 +32,43 @@ class Website:
         # Parse the html to get the number of pages
         soup = BeautifulSoup(pages_html[0], "html.parser")
         nav = soup.find_all("ul", {"class": "pageNav-main"})[0]
-        pages = int(nav.find_all("li")[-1].a.text)  # type: ignore
-        print(pages)
+        pages_cont = int(nav.find_all("li")[-1].a.text)  # type: ignore
 
         # fetch all the pages
         urls = [
             self.url + f"/forums/{label}.{id}/page-{i}?order=post_date&direction=asc"
-            for i in range(2, pages + 1)
+            for i in range(2, pages_cont + 1)
         ]
-        print(urls)
         async with aiohttp.ClientSession() as session:
             htmls = await fetch_all(session, urls)
             for html in htmls:
                 pages_html.append(html)
 
-        print("Pages_html len:", len(pages_html))
         # Parse the html to get the threads
-        for i, html in enumerate(pages_html):
+        for _i, html in enumerate(pages_html):
             soup = BeautifulSoup(html, "html.parser")
             thread_list = soup.find_all(
                 "div",
                 {"class": "js-threadList"},
                 recursive=True,
             )[0]
-            threads = thread_list.find_all(
-                "a", {"data-tp-primary": "on"}, recursive=True
-            )
-
-            print("page:", i)
-            print("threads found:", len(threads))
-            print("thread 1:", threads[0].text)
-            # print(html[:15] + "\n")
+            threads = thread_list.find_all("div", recursive=False)
+            for thread in threads:
+                link = thread.find_all("a", {"data-tp-primary": "on"}, recursive=True)[
+                    0
+                ]
+                pages_cont = thread.find(
+                    "span", class_="structItem-pageJump", recursive=True
+                )
+                pages: int = 1
+                if pages_cont:
+                    pages = int(pages_cont.find_all("a", recursive=False)[-1].text)
+                href = link.get("href")
+                temp = href.split("/")[-2]
+                temp = temp.split(".")
+                id = int(temp[-1])
+                url_label = "".join(temp[:-1])
+                self.threads.append(Thread(url_label, id, link.text, pages))
 
 
 @dataclass
@@ -71,8 +77,8 @@ class Thread:
 
     url_label: str
     id: int
-    title: str | None = None
-    pages: int | None = None
+    title: str
+    pages: int
     """The number of pages in the thread"""
 
 
