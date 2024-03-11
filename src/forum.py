@@ -6,7 +6,7 @@ import pandas as pd
 import aiohttp
 
 
-from forum.fetcher import fetch_all
+from src.fetcher import fetch_all
 
 
 class Website:

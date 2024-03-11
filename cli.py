@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 import click
 
-from forum.forum import Website
+from src.forum import Website
 
 
 @click.group()

@@ -1,4 +1,4 @@
-from forum.forum import Website
+from src.forum import Website
 
 MUST_READ = ("must-read-content", 23)
 LOUNGE = ("the-lounge", 4)
