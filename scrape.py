@@ -1,4 +1,4 @@
-from src.forum import Website
+from src.scraper.forum import Website
 
 FORUMS = [
     ("must-read-content", 23),

@@ -7,7 +7,7 @@ import pandas as pd
 import aiohttp
 
 
-from src.fetcher import fetch_all
+from src.scraper.fetcher import fetch_all
 from src.utils import print_progress_bar
 
 

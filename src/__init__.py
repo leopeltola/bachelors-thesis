@@ -1,2 +1,2 @@
-from src.fetcher import fetch_all
-from src.forum import Website, Post, Thread, Forum
+from src.scraper.fetcher import fetch_all  # type: ignore
+from src.scraper.forum import Website, Post, Thread, Forum  # type: ignore
