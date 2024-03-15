@@ -1,19 +1,44 @@
 import aiohttp
 import asyncio
 
-BATCH_FETCHES = 5
-BATCH_DELAY = 0.4  # seconds
+from src.utils import print_progress_bar
+
+BATCH_FETCHES = 10
+BATCH_DELAY = 0.5  # seconds
 
 
 async def fetch(session: aiohttp.ClientSession, url: str) -> str:
+    """
+    Fetches the content of a URL using an asynchronous HTTP GET request.
+
+    Args:
+        session (aiohttp.ClientSession): The aiohttp client session to use for the request.
+        url (str): The URL to fetch.
+
+    Returns:
+        str: The content of the URL.
+
+    Raises:
+        aiohttp.ClientResponseError: If the response status is not 200.
+    """
     async with session.get(url) as response:
-        aiohttp.ClientResponse
         if response.status != 200:
             response.raise_for_status()
         return await response.text()
 
 
 async def fetch_all(session: aiohttp.ClientSession, urls: list[str]) -> list[str]:
+    """
+    Fetches multiple URLs asynchronously using the provided aiohttp ClientSession.
+
+    Args:
+        session (aiohttp.ClientSession): The aiohttp ClientSession to use for making requests.
+        urls (list[str]): A list of URLs to fetch.
+
+    Returns:
+        list[str]: A list of fetched responses.
+
+    """
     results: list[str] = []
     chunks: list[list[str]] = []
     if len(urls) > BATCH_FETCHES:
@@ -38,5 +63,7 @@ async def fetch_all(session: aiohttp.ClientSession, urls: list[str]) -> list[str
         results += chunk_results
         if batch_fetch:
             await asyncio.sleep(BATCH_DELAY)
-            print(f"Fetched chunk {i + 1}/{len(chunks)}...")
+            print_progress_bar(
+                i + 1, len(chunks), prefix="Fetching:", suffix="complete"
+            )
     return results
