@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.analysis.topic_modelling import topic_model_nmf  # type: ignore
+from src.analysis.topic_modelling import topic_model_lda, topic_model_nmf  # type: ignore
 from src.analysis.wordcloud import wordcloud  # type: ignore
 from src.utils import load_data_from_csv
 import re
@@ -49,15 +49,16 @@ if __name__ == "__main__":
 
     posts["content"] = posts["content"].replace("", np.nan)  # type: ignore
 
-    # posts.dropna(  # type: ignore
-    #     subset=["content"],
-    #     inplace=True,
-    # )
+    posts.dropna(  # type: ignore
+        subset=["content"],
+        inplace=True,
+    )
     # print number of nans
-    print(posts["content"].isna().sum())  # type: ignore
-    print(posts["content"].count())  # type: ignore
-    print(posts)
-    print(posts.describe())
+    # print(posts["content"].isna().sum())  # type: ignore
+    # print(posts["content"].count())  # type: ignore
+    # print(posts)
+    # print(posts.describe())
 
-    # topic_model_nmf(posts["content"])
+    topic_model_nmf(posts["content"])
+    # topic_model_lda(posts["content"])
     # wordcloud(posts["content"])  # type: ignore
