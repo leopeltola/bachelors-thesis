@@ -1,12 +1,15 @@
+import numpy as np
 from pandas import Series
-from wordcloud import WordCloud  # type: ignore
+from wordcloud import WordCloud
+import nltk
 
 
-def wordcloud(data: Series) -> None:  # type: ignore
-    long_string = ",".join(list(data.dropna(inplace=False).values))  # type: ignore
+def wordcloud(data: Series) -> None:
+    # data.replace("nan", np.NaN, inplace=True)
+    long_string = ",".join(list(data.loc[data.notnull()].values))
     print("--- Generating word cloud ---")
-    print("Nans in data: ", data.isna().sum())  # type: ignore
-    print("Nans in data: ", long_string.count(" nan "))  # type: ignore
+    print("Nans in data: ", data.isna().sum())
+    print("Nans in datastring: ", long_string.count(",nan,"))
     # Create a WordCloud object
     wordcloud = WordCloud(
         background_color="white",
@@ -17,8 +20,9 @@ def wordcloud(data: Series) -> None:  # type: ignore
         width=1300,
     )
     # Generate a word cloud
-    wordcloud.generate(long_string)  # type: ignore
+    wordcloud.generate(long_string)
     # Visualize the word cloud
-    img = wordcloud.to_image()  # type: ignore
-    img.show()  # type: ignore
-    img.save("wordcloud.png")  # type: ignore
+    img = wordcloud.to_image()
+    img.show()
+    img.save("wordcloud.png")
+    print("--- Word cloud saved as wordcloud.png ---")
