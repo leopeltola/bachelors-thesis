@@ -1,7 +1,8 @@
+import re
+
 import nltk
 import numpy as np
 import pandas as pd
-import re
 
 
 def lemmatize(text):
@@ -39,6 +40,10 @@ def preprocess(data: pd.DataFrame) -> None:
     data["content"] = data["content"].map(lemmatize)
     # Replace string "nan" with NaN
     data["content"] = data["content"].replace("nan", np.nan)
+    data.dropna(
+        subset=["content"],
+        inplace=True,
+    )
 
 
 if __name__ == "__main__":

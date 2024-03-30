@@ -1,9 +1,10 @@
-import aiohttp
 import asyncio
+
+import aiohttp
 
 from src.utils import print_progress_bar
 
-BATCH_FETCHES = 10
+BATCH_FETCHES = 50
 BATCH_DELAY = 0.5  # seconds
 
 
@@ -64,6 +65,6 @@ async def fetch_all(session: aiohttp.ClientSession, urls: list[str]) -> list[str
         if batch_fetch:
             await asyncio.sleep(BATCH_DELAY)
             print_progress_bar(
-                i + 1, len(chunks), prefix="Fetching:", suffix="complete"
+                i + 1, len(chunks), prefix="Fetching:", suffix="complete", decimals=2
             )
     return results

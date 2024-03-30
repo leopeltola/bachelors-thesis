@@ -2,10 +2,10 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from bs4 import BeautifulSoup
-import pandas as pd
-import aiohttp
 
+import aiohttp
+import pandas as pd
+from bs4 import BeautifulSoup
 
 from src.scraper.fetcher import fetch_all
 from src.utils import print_progress_bar
@@ -27,7 +27,7 @@ class Website:
         self.forums: list[Forum] = []
         self.threads: list[Thread] = []
         self.posts: list[Post] = []
-
+    
     def load_and_save_forum(self, label: str, id: int) -> None:
         """
         Loads and saves a forum with the given label and ID.
@@ -54,10 +54,10 @@ class Website:
             # dump saved stuff to disk
             print("Error loading forum: ", e)
             self.threads_as_dataframe().to_csv(
-                path / f"ERROR_threads_{save_label}.csv"
+                path / f"ERROR_threads_{save_label}.csv.zip"
             )
             self.posts_as_dataframe().to_csv(
-                path / f"ERROR_posts_{save_label}.csv"
+                path / f"ERROR_posts_{save_label}.csv.zip "
             )
             return
         print(
@@ -69,8 +69,8 @@ class Website:
         print(threads)
         posts = self.posts_as_dataframe()
         print(posts)
-        threads.to_csv(path / f"threads_{save_label}.csv")
-        posts.to_csv(path / f"posts_{save_label}.csv")
+        threads.to_csv(path / f"threads_{save_label}.csv.zip")
+        posts.to_csv(path / f"posts_{save_label}.csv.zip")
 
     async def load_forum(self, label: str, id: int) -> None:
             """
@@ -101,7 +101,7 @@ class Website:
                 for i in range(2, pages_cont + 1)
             ]
 
-            print(f"Fetching {len(urls)} pages...")
+            print(f"Fetching {len(urls)+1} pages...")
             async with aiohttp.ClientSession() as session:
                 pages_html = await fetch_all(session, urls)
 
@@ -109,20 +109,29 @@ class Website:
             _threads = self.extract_threads_from_html(pages_html)
 
             self.threads += _threads # Add to total threads
-            print("Threads:", len(self.threads))
+            print("Threads:", len(_threads))
 
+            # dump threads to disk
+            self.threads_as_dataframe().to_csv(f"data/threads_{label}_{id}.csv.zip")
+            
             # Get thread paged urls
             urls = self.generate_thread_urls(_threads)
 
-            print(f"Fetching {len(urls)} thread pages...")
-            thread_html: list[str] = []
-            async with aiohttp.ClientSession() as session:
-                thread_html += await fetch_all(session, urls)
+            # Chunk the urls into batches of 10000
+            urls_chunked: list[list[str]] = []
+            for i in range(0, len(urls), 10000):
+                urls_chunked.append(urls[i : i + 10000])
+            
+            for i, chunk in enumerate(urls_chunked):
+                print(f"Fetching {len(chunk)} thread pages chunked {i+1}/{len(urls_chunked)}...")
+                thread_html: list[str] = []
+                async with aiohttp.ClientSession() as session:
+                    thread_html += await fetch_all(session, chunk)
 
-            # Parse the html to get the posts
-            print(f"Parsing {len(thread_html)} thread pages...")
-            _posts = self.extract_posts_from_html(thread_html)
-            self.posts += _posts
+                # Parse the html to get the posts
+                print(f"Parsing {len(thread_html)} thread pages...")
+                _posts = self.extract_posts_from_html(thread_html)
+                self.posts += _posts
 
     def extract_posts_from_html(self, thread_html: list[str]):
         """
@@ -165,6 +174,7 @@ class Website:
                 self.posts.append(
                     Post(author, post_id, content, thread_id, time_posted)
                 )
+            # other posts
             articles_cont = soup.select("div.block-body.js-replyNewMessageContainer")
             if not articles_cont:
                 print(f"No articles found in thread {thread_id}")
@@ -176,8 +186,23 @@ class Website:
                     author: str = article.get("data-author")  # type: ignore
                     post_id = int(article.get("data-content").split("-")[-1])  # type: ignore
                     inner_bb = article.select("div.bbWrapper")[0]
+
+                    # remove quotes
                     for quote in inner_bb.find_all("blockquote"):
                         quote.decompose()
+                    # remove images
+                    for img in inner_bb.select("div.bbImageWrapper"):
+                        img.decompose()
+                    # remove inline videos
+                    for video in inner_bb.select("div.bbMediaWrapper"):
+                        video.decompose()
+                    # remove youtube videos
+                    for video in inner_bb.select("span[data-s9e-mediaembed=\"youtube\"]"):
+                        video.decompose()
+                    # remove embed websites
+                    for embed in inner_bb.select("div.bbCodeBlock"):
+                        embed.decompose()
+                    
                     content = inner_bb.text
                     time_posted = datetime.fromisoformat(
                         article.select("time.u-dt")[0].get("datetime")  # type: ignore
@@ -268,12 +293,13 @@ class Website:
 
     def posts_as_dataframe(self) -> pd.DataFrame:
             """
-            Converts the posts data into a pandas DataFrame.
+            Converts the posts data into a pandas DataFrame. Drops duplicates based on the post id.
 
             Returns:
                 pd.DataFrame: A DataFrame containing the posts data.
             """
             df = pd.DataFrame(self.posts)
+            df.drop_duplicates(subset="id", inplace=True)
             df.set_index("id", drop=True, inplace=True)  # type: ignore
             return df
 

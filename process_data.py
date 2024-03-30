@@ -5,17 +5,21 @@ import numpy as np
 import pandas as pd
 
 from src.analysis.preprocess import preprocess
-from src.analysis.topic_modelling import topic_model_lda, topic_model_nmf  # type: ignore
+from src.analysis.topic_modelling import (
+    topic_model_lda,  # type: ignore
+    topic_model_nmf,
+)
+from src.analysis.toxic import toxicity_analysis
 from src.analysis.wordcloud import wordcloud  # type: ignore
 from src.utils import load_data_from_csv
 
 pd.options.plotting.backend = "plotly"
-
+pd.options.mode.copy_on_write = True
 
 if __name__ == "__main__":
     # load forum dataframes from .csv files
     path = Path("data")
-
+    print("Loading data...")
     posts, threads = load_data_from_csv(
         [
             path / "posts_must-read-content_03-11-2024_16.17.32.csv",
@@ -42,16 +46,21 @@ if __name__ == "__main__":
     # Generate new "nth_post_by_user" column
     posts["nth_post_by_user"] = posts.groupby("author").cumcount() + 1  # type: ignore
 
-    # Preview data
-    print(users.describe(include="all"))
-    print(users[users["num_posts_by_user"] > 50].count())  # type: ignore
+    # Debug Preview data
+    # print(users.describe(include="all"))
+    # print(users[users["num_posts_by_user"] > 50].count())  # type: ignore
 
-    # print number of nans
-    # print(posts["content"].isna().sum())  # type: ignore
-    # print(posts["content"].count())  # type: ignore
-    # print(posts)
-    # print(posts.describe())
+    print("Nans in data: ", posts.isna().sum())
 
     # topic_model_nmf(posts["content"])
     # topic_model_lda(posts["content"])
-    wordcloud(posts["content"])
+    # wordcloud(posts["content"])
+    start = datetime.now()
+    posts = toxicity_analysis(posts)
+    print(f"Toxicity analysis took: {datetime.now() - start}\n")
+    posts.to_csv("data/posts.csv")
+    users.to_csv("data/users.csv")
+    threads.to_csv("data/threads.csv")
+    print(posts)
+    # posts.sort_values(by="severe_toxicity", ascending=False, inplace=True)
+    # print(posts)

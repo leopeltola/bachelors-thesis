@@ -3,3 +3,4 @@
 /scraper.egg-info
 __pycache__/
 *.csv
+*.csv.zip
