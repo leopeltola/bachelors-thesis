@@ -3,7 +3,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 pd.options.mode.copy_on_write = True
 
-feminism_keywords = [
+feminism_keywords = [  # TODO: research how vectorization interacts with whitespace
     "feminism",
     "feminist",
     "gender equality",

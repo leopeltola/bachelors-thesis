@@ -9,35 +9,35 @@ if __name__ == "__main__":
     users = pd.read_csv("data/users.csv")
     threads = pd.read_csv("data/threads.csv")
 
-    posts.sort_values(by="severe_toxicity", ascending=False, inplace=True)
-    # print(posts)
-    top_toxic_posts = posts.head(10)
-    for index, row in top_toxic_posts.iterrows():
-        print(row["content"])
-        print(row["severe_toxicity"])
-        print()
-    posts.sort_values(by="severe_toxicity", ascending=True, inplace=True)
+    # posts.sort_values(by="severe_toxicity", ascending=False, inplace=True)
+    # # print(posts)
+    # top_toxic_posts = posts.head(10)
+    # for index, row in top_toxic_posts.iterrows():
+    #     print(row["content"])
+    #     print(row["severe_toxicity"])
+    #     print()
+    # posts.sort_values(by="severe_toxicity", ascending=True, inplace=True)
 
-    # # Pearson correlation between nth_post_by_user and severe_toxicity
-    # print(
-    #     "Nth post by user & severe toxicity Pearson correlation:",
-    #     posts["nth_post_by_user"].corr(posts["severe_toxicity"]),
-    # )
-    # # Pearson correlation between nth_post_by_user and sexual_explicit
-    # print(
-    #     "Nth post by user & sexual explicit Pearson correlation:",
-    #     posts["nth_post_by_user"].corr(posts["sexual_explicit"]),
-    # )
-    # # Spearman correlation between nth_post_by_user and severe_toxicity
-    # print(
-    #     "Nth post by user & severe toxicity Spearman correlation:",
-    #     posts["nth_post_by_user"].corr(posts["severe_toxicity"], method="spearman"),
-    # )
-    # # Spearman correlation between nth_post_by_user and sexual_explicit
-    # print(
-    #     "Nth post by user & sexual explicit Spearman correlation:",
-    #     posts["nth_post_by_user"].corr(posts["sexual_explicit"], method="spearman"),
-    # )
+    # Pearson correlation between nth_post_by_user and severe_toxicity
+    print(
+        "Nth post by user & severe toxicity Pearson correlation:",
+        posts["nth_post_by_user"].corr(posts["severe_toxicity"]),
+    )
+    # Pearson correlation between nth_post_by_user and sexual_explicit
+    print(
+        "Nth post by user & sexual explicit Pearson correlation:",
+        posts["nth_post_by_user"].corr(posts["sexual_explicit"]),
+    )
+    # Spearman correlation between nth_post_by_user and severe_toxicity
+    print(
+        "Nth post by user & severe toxicity Spearman correlation:",
+        posts["nth_post_by_user"].corr(posts["severe_toxicity"], method="spearman"),
+    )
+    # Spearman correlation between nth_post_by_user and sexual_explicit
+    print(
+        "Nth post by user & sexual explicit Spearman correlation:",
+        posts["nth_post_by_user"].corr(posts["sexual_explicit"], method="spearman"),
+    )
 
     # var = "severe_toxicity"
     # plt.scatter(posts["nth_post_by_user"], posts[var], s=0.05)

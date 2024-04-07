@@ -5,13 +5,10 @@ import numpy as np
 import pandas as pd
 
 from src.analysis.preprocess import preprocess
-from src.analysis.topic_modelling import topic_model_lda  # type: ignore
-from src.analysis.topic_modelling import topic_model_nmf
 from src.analysis.toxic import compute_toxicity_and_sexuality_scores
-from src.analysis.wordcloud import wordcloud  # type: ignore
 from src.utils import load_data_from_csv
 
-pd.options.plotting.backend = "plotly"
+# pd.options.plotting.backend = "plotly"
 pd.options.mode.copy_on_write = True
 
 if __name__ == "__main__":
@@ -19,12 +16,8 @@ if __name__ == "__main__":
     path = Path("data")
     print("Loading data...")
     posts, threads = load_data_from_csv(
-        [
-            path / "posts_must-read-content_03-11-2024_16.17.32.csv",
-        ],
-        [
-            path / "threads_must-read-content_03-11-2024_16.17.32.csv",
-        ],
+        [path / "posts_must-read-content_2024-04-07_12.33.16.csv.zip"],
+        [path / "threads_must-read-content_2024-04-07_12.33.16.csv.zip"],
     )
 
     # Preprocess data
@@ -50,12 +43,12 @@ if __name__ == "__main__":
 
     print("Nans in data: ", posts.isna().sum())
     start = datetime.now()
-    posts = compute_toxicity_and_sexuality_scores(posts)
-    print(f"Toxicity analysis took: {datetime.now() - start}\n")
+    # posts = compute_toxicity_and_sexuality_scores(posts)
+    # print(f"Toxicity analysis took: {datetime.now() - start}\n")
 
-    posts.to_csv("data/posts.csv")
-    users.to_csv("data/users.csv")
-    threads.to_csv("data/threads.csv")
+    # posts.to_csv("data/posts.csv")
+    # users.to_csv("data/users.csv")
+    # threads.to_csv("data/threads.csv")
     print(posts)
     # posts.sort_values(by="severe_toxicity", ascending=False, inplace=True)
     # print(posts)

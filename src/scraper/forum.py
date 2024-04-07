@@ -133,6 +133,12 @@ class Website:
                 print(f"Parsing {len(thread_html)} thread pages in multiple threads...")
                 _posts = self.extract_posts_from_html_chunk(thread_html)
                 self.posts += _posts
+                self.dumb_posts_to_disk()
+    
+    def dumb_posts_to_disk(self) -> None:
+        # dump posts to disk, to the same file
+        df = self.posts_as_dataframe()
+        df.to_csv(f"data/posts_dump.csv.zip")
 
     def extract_posts_from_html_chunk(self, thread_html: list[str]):
         """
@@ -168,7 +174,6 @@ class Website:
         )[0].get("data-lb-id")
         thread_id: int = int(thread_id_src.split("-")[-1])
 
-        # TODO: Get the posts from html
         first = soup.select(
             "article.message.message--article.js-post.js-inlineModContainer.is-first",
         )
