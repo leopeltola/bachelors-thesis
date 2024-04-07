@@ -122,6 +122,11 @@ class Website:
             urls_chunked: list[list[str]] = []
             for i in range(0, len(urls), 10000):
                 urls_chunked.append(urls[i : i + 10000])
+
+            starting_chunk = 0
+            # Drop starting_chunk number of chunks from the beginning
+            urls_chunked = urls_chunked[starting_chunk:]
+            
             
             for i, chunk in enumerate(urls_chunked):
                 print(f"Fetching {len(chunk)} thread pages chunked {i+1}/{len(urls_chunked)}...")
@@ -149,7 +154,6 @@ class Website:
 
         Returns:
             list[Post]: A list of Post objects extracted from the HTML.
-
         """
         _posts: list[Post] = []
         
