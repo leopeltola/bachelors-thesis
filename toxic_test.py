@@ -2,10 +2,10 @@ import pandas as pd
 import torch
 from detoxify import Detoxify
 
-from src.utils import print_progress_bar
+pd.options.mode.copy_on_write = True
 
 
-def compute_toxicity_and_sexuality_scores(data: pd.DataFrame) -> pd.DataFrame:
+def toxicity_analysis(data: pd.DataFrame) -> pd.DataFrame:
     """Toxicity analysis using Detoxify. Modifies the passed dataframe in place, adding to it the toxicity scores."""
     # A naive implementation. May crash with large datasets -> partition if needed
     # Check if data parameter has any non-string in "content" column
@@ -22,13 +22,11 @@ def compute_toxicity_and_sexuality_scores(data: pd.DataFrame) -> pd.DataFrame:
             len(chunks), model.device
         )
     )
-    print_progress_bar(0, len(chunks))
     for i, chunk in enumerate(chunks):
         scores = model.predict(chunk["content"].tolist())
         chunk["severe_toxicity"] = scores["severe_toxicity"]
         chunk["toxicity"] = scores["toxicity"]
         chunk["sexual_explicit"] = scores["sexual_explicit"]
-        print_progress_bar(i + 1, len(chunks))
 
     # concatenate the chunks back into the original dataframe
     data = pd.concat(chunks)
@@ -38,13 +36,13 @@ def compute_toxicity_and_sexuality_scores(data: pd.DataFrame) -> pd.DataFrame:
 if __name__ == "__main__":
     df = pd.DataFrame(
         [
-            "This is a test sentence",
-            "Kill yourself",
-            "show your tits",
+            "hi there",
+            "i'll kill you",
+            "youre cute",
             "My example is touching one foid's ass on purpose when i was in grade 7.",
         ],
         columns=["content"],
     )
     print(df)
-    compute_toxicity_and_sexuality_scores(df)
+    df = toxicity_analysis(df)
     print(df)

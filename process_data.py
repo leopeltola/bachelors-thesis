@@ -5,11 +5,9 @@ import numpy as np
 import pandas as pd
 
 from src.analysis.preprocess import preprocess
-from src.analysis.topic_modelling import (
-    topic_model_lda,  # type: ignore
-    topic_model_nmf,
-)
-from src.analysis.toxic import toxicity_analysis
+from src.analysis.topic_modelling import topic_model_lda  # type: ignore
+from src.analysis.topic_modelling import topic_model_nmf
+from src.analysis.toxic import compute_toxicity_and_sexuality_scores
 from src.analysis.wordcloud import wordcloud  # type: ignore
 from src.utils import load_data_from_csv
 
@@ -51,13 +49,10 @@ if __name__ == "__main__":
     # print(users[users["num_posts_by_user"] > 50].count())  # type: ignore
 
     print("Nans in data: ", posts.isna().sum())
-
-    # topic_model_nmf(posts["content"])
-    # topic_model_lda(posts["content"])
-    # wordcloud(posts["content"])
     start = datetime.now()
-    posts = toxicity_analysis(posts)
+    posts = compute_toxicity_and_sexuality_scores(posts)
     print(f"Toxicity analysis took: {datetime.now() - start}\n")
+
     posts.to_csv("data/posts.csv")
     users.to_csv("data/users.csv")
     threads.to_csv("data/threads.csv")

@@ -1,6 +1,7 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
+from multiprocessing import Pool
 from pathlib import Path
 
 import aiohttp
@@ -129,11 +130,11 @@ class Website:
                     thread_html += await fetch_all(session, chunk)
 
                 # Parse the html to get the posts
-                print(f"Parsing {len(thread_html)} thread pages...")
-                _posts = self.extract_posts_from_html(thread_html)
+                print(f"Parsing {len(thread_html)} thread pages in multiple threads...")
+                _posts = self.extract_posts_from_html_chunk(thread_html)
                 self.posts += _posts
 
-    def extract_posts_from_html(self, thread_html: list[str]):
+    def extract_posts_from_html_chunk(self, thread_html: list[str]):
         """
         Extracts posts from HTML and returns a list of Post objects.
 
@@ -145,72 +146,83 @@ class Website:
 
         """
         _posts: list[Post] = []
-        for i, html in enumerate(thread_html):
-            soup = BeautifulSoup(html, "html.parser")
-            thread_id_src = soup.find_all(
-                "div", class_="block-container lbContainer", recursive=True
-            )[0].get("data-lb-id")
-            thread_id: int = int(thread_id_src.split("-")[-1])
-            print_progress_bar(
-                i + 1, len(thread_html), prefix="Processing threads:", suffix="complete"
-            )
+        
+        with Pool() as pool:
+            start = datetime.now()
+            _posts_chunks = pool.map(self.extract_posts_from_html, thread_html)
+            for chunk in _posts_chunks:
+                _posts += chunk
+            print(f"Extracted {len(_posts)} posts in {datetime.now() - start} multi-core")
+                    
+        return _posts
+    
+    def extract_posts_from_html(self, html: str) -> list["Post"]:
+        """
+        Extracts posts from HTML and returns a list of Post objects.
+        """
+        _posts: list[Post] = []
+        
+        soup = BeautifulSoup(html, "html.parser")
+        thread_id_src = soup.find_all(
+            "div", class_="block-container lbContainer", recursive=True
+        )[0].get("data-lb-id")
+        thread_id: int = int(thread_id_src.split("-")[-1])
 
-            # TODO: Get the posts from html
-            first = soup.select(
-                "article.message.message--article.js-post.js-inlineModContainer.is-first",
+        # TODO: Get the posts from html
+        first = soup.select(
+            "article.message.message--article.js-post.js-inlineModContainer.is-first",
+        )
+        if first:
+            # First post
+            post = first[0]
+            author = post.get("data-author")  # type: ignore
+            post_id = int(post.get("data-content").split("-")[-1])  # type: ignore
+            inner_bb = post.select("div.bbWrapper")[0]
+            for quote in inner_bb.find_all("blockquote"):
+                quote.decompose() # Remove quotes. TODO: images and videos
+            content = inner_bb.text
+            time_posted = datetime.fromisoformat(
+                post.select("time")[0].get("datetime")  # type: ignore
             )
-            if first:
-                # First post
-                post = first[0]
-                author = post.get("data-author")  # type: ignore
-                post_id = int(post.get("data-content").split("-")[-1])  # type: ignore
-                inner_bb = post.select("div.bbWrapper")[0]
+            _posts.append(
+                Post(author, post_id, content, thread_id, time_posted)
+            )
+        # other posts
+        articles_cont = soup.select("div.block-body.js-replyNewMessageContainer")
+        if not articles_cont:
+            print(f"No articles found in thread {thread_id}")
+        else:
+            articles = articles_cont[0].select(
+                "article.message.message--post.js-post.js-inlineModContainer"
+            )
+            for article in articles:
+                author: str = article.get("data-author")  # type: ignore
+                post_id = int(article.get("data-content").split("-")[-1])  # type: ignore
+                inner_bb = article.select("div.bbWrapper")[0]
+
+                # remove quotes
                 for quote in inner_bb.find_all("blockquote"):
-                    quote.decompose() # Remove quotes. TODO: images and videos
+                    quote.decompose()
+                # remove images
+                for img in inner_bb.select("div.bbImageWrapper"):
+                    img.decompose()
+                # remove inline videos
+                for video in inner_bb.select("div.bbMediaWrapper"):
+                    video.decompose()
+                # remove youtube videos
+                for video in inner_bb.select("span[data-s9e-mediaembed=\"youtube\"]"):
+                    video.decompose()
+                # remove embed websites
+                for embed in inner_bb.select("div.bbCodeBlock"):
+                    embed.decompose()
+                
                 content = inner_bb.text
                 time_posted = datetime.fromisoformat(
-                    post.select("time")[0].get("datetime")  # type: ignore
+                    article.select("time.u-dt")[0].get("datetime")  # type: ignore
                 )
-                self.posts.append(
+                _posts.append(
                     Post(author, post_id, content, thread_id, time_posted)
                 )
-            # other posts
-            articles_cont = soup.select("div.block-body.js-replyNewMessageContainer")
-            if not articles_cont:
-                print(f"No articles found in thread {thread_id}")
-            else:
-                articles = articles_cont[0].select(
-                    "article.message.message--post.js-post.js-inlineModContainer"
-                )
-                for article in articles:
-                    author: str = article.get("data-author")  # type: ignore
-                    post_id = int(article.get("data-content").split("-")[-1])  # type: ignore
-                    inner_bb = article.select("div.bbWrapper")[0]
-
-                    # remove quotes
-                    for quote in inner_bb.find_all("blockquote"):
-                        quote.decompose()
-                    # remove images
-                    for img in inner_bb.select("div.bbImageWrapper"):
-                        img.decompose()
-                    # remove inline videos
-                    for video in inner_bb.select("div.bbMediaWrapper"):
-                        video.decompose()
-                    # remove youtube videos
-                    for video in inner_bb.select("span[data-s9e-mediaembed=\"youtube\"]"):
-                        video.decompose()
-                    # remove embed websites
-                    for embed in inner_bb.select("div.bbCodeBlock"):
-                        embed.decompose()
-                    
-                    content = inner_bb.text
-                    time_posted = datetime.fromisoformat(
-                        article.select("time.u-dt")[0].get("datetime")  # type: ignore
-                    )
-                    _posts.append(
-                        Post(author, post_id, content, thread_id, time_posted)
-                    )
-                    
         return _posts
 
     def generate_thread_urls(self, threads: list["Thread"]):
