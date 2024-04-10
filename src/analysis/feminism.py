@@ -41,6 +41,8 @@ def compute_feminism_scores(posts: pd.DataFrame) -> pd.DataFrame:
     Returns:
     pd.DataFrame: A DataFrame with the computed feminism scores.
     """
+    # drop rows with duplicate indices
+    posts = posts[~posts.index.duplicated(keep="first")]
     # TF-IDF Vectorization
     vectorizer = CountVectorizer(stop_words="english", vocabulary=feminism_keywords)
     posts_vector = vectorizer.fit_transform(posts["content"])

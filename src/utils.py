@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import pandas as pd
 
 
@@ -54,10 +55,14 @@ def load_data_from_csv(
     for post in posts_paths:
         posts_dfs.append(pd.read_csv(post))  # type: ignore
     posts = pd.concat(posts_dfs)  # type: ignore
+    # remove duplicates
+    # posts.drop_duplicates(subset=["content"], inplace=True)
     # Threads
     threads_dfs: list[pd.DataFrame] = []
     for thread in threads_paths:
         threads_dfs.append(pd.read_csv(thread))  # type: ignore
     threads = pd.concat(threads_dfs)  # type: ignore
+    # remove duplicates
+    # threads.drop_duplicates(subset=["title"], inplace=True)
 
     return (posts, threads)
