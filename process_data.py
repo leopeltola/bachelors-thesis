@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from src.analysis.feminism import compute_feminism_scores
 from src.analysis.preprocess import preprocess
 from src.analysis.toxic import compute_toxicity_and_sexuality_scores
 from src.utils import load_data_from_csv
@@ -33,22 +34,24 @@ if __name__ == "__main__":
     # Generate new "num_posts_by_user" column
     users["num_posts_by_user"] = posts["author"].value_counts()  # type: ignore
     users.sort_values(by="num_posts_by_user", ascending=False, inplace=True)  # type: ignore
-
     # Generate new "nth_post_by_user" column
     posts["nth_post_by_user"] = posts.groupby("author").cumcount() + 1  # type: ignore
 
     # Debug Preview data
-    # print(users.describe(include="all"))
-    # print(users[users["num_posts_by_user"] > 50].count())  # type: ignore
+    print(users.describe(include="all"))
+    print(users[users["num_posts_by_user"] > 50].count())  # type: ignore
 
-    print("Nans in data: ", posts.isna().sum())
+    # Compute toxicity, sexuality and feminism scores
     start = datetime.now()
-    # posts = compute_toxicity_and_sexuality_scores(posts)
-    # print(f"Toxicity analysis took: {datetime.now() - start}\n")
+    print("computing feminism scores...")
+    posts = compute_feminism_scores(posts)
+    print(f"Feminism analysis took: {datetime.now() - start}\n")
+    print("computing toxicity and sexuality...")
+    start = datetime.now()
+    posts = compute_toxicity_and_sexuality_scores(posts)
+    print(f"Toxicity analysis took: {datetime.now() - start}\n")
 
-    # posts.to_csv("data/posts.csv")
-    # users.to_csv("data/users.csv")
-    # threads.to_csv("data/threads.csv")
+    posts.to_csv("data/preprocessed/posts.csv")
+    users.to_csv("data/preprocessed/users.csv")
+    threads.to_csv("data/preprocessed/threads.csv")
     print(posts)
-    # posts.sort_values(by="severe_toxicity", ascending=False, inplace=True)
-    # print(posts)

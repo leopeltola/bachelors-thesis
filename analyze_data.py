@@ -4,40 +4,43 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from src.analysis.feminism import compute_feminism_scores
+
+
+def correlation(posts: pd.DataFrame, var1: str, var2: str) -> None:
+    """
+    Compute Pearson and Spearman correlation between two variables in a DataFrame.
+    """
+    # Pearson correlation
+    print(f"{var1} & {var2} Pearson correlation:", posts[var1].corr(posts[var2]))
+    # Spearman correlation
+    print(
+        f"{var1} & {var2} Spearman correlation:",
+        posts[var1].corr(posts[var2], method="spearman"),
+    )
+
+
 if __name__ == "__main__":
     posts = pd.read_csv("data/posts.csv")
     users = pd.read_csv("data/users.csv")
     threads = pd.read_csv("data/threads.csv")
 
-    # posts.sort_values(by="severe_toxicity", ascending=False, inplace=True)
-    # # print(posts)
-    # top_toxic_posts = posts.head(10)
-    # for index, row in top_toxic_posts.iterrows():
-    #     print(row["content"])
-    #     print(row["severe_toxicity"])
-    #     print()
+    print(posts)
+    # posts.to_csv("data/posts.csv")
+
+    posts.sort_values(by="severe_toxicity", ascending=False, inplace=True)
+    # print(posts)
+    top_toxic_posts = posts.head(10)
+    for index, row in top_toxic_posts.iterrows():
+        print(row["content"])
+        print(row["severe_toxicity"])
+        print(row["id"])
+        print()
     # posts.sort_values(by="severe_toxicity", ascending=True, inplace=True)
 
-    # Pearson correlation between nth_post_by_user and severe_toxicity
-    print(
-        "Nth post by user & severe toxicity Pearson correlation:",
-        posts["nth_post_by_user"].corr(posts["severe_toxicity"]),
-    )
-    # Pearson correlation between nth_post_by_user and sexual_explicit
-    print(
-        "Nth post by user & sexual explicit Pearson correlation:",
-        posts["nth_post_by_user"].corr(posts["sexual_explicit"]),
-    )
-    # Spearman correlation between nth_post_by_user and severe_toxicity
-    print(
-        "Nth post by user & severe toxicity Spearman correlation:",
-        posts["nth_post_by_user"].corr(posts["severe_toxicity"], method="spearman"),
-    )
-    # Spearman correlation between nth_post_by_user and sexual_explicit
-    print(
-        "Nth post by user & sexual explicit Spearman correlation:",
-        posts["nth_post_by_user"].corr(posts["sexual_explicit"], method="spearman"),
-    )
+    correlation(posts, "nth_post_by_user", "severe_toxicity")
+    correlation(posts, "nth_post_by_user", "feminism_score")
+    correlation(posts, "nth_post_by_user", "sexual_explicit")
 
     # var = "severe_toxicity"
     # plt.scatter(posts["nth_post_by_user"], posts[var], s=0.05)

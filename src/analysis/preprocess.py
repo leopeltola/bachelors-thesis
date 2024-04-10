@@ -14,7 +14,8 @@ def lemmatize(text):
 def preprocess(data: pd.DataFrame) -> None:
     # Assure that the content column is of type string
     data["content"] = data["content"].astype(str)
-
+    # Remove duplicates
+    data.drop_duplicates(subset=["id"], inplace=True)
     # Remove punctuation
     data["content"] = data["content"].map(lambda x: x.replace("'", ""))
     data["content"] = data["content"].map(lambda x: re.sub("[,\\.!?]", "", str(x)))

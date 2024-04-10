@@ -38,7 +38,7 @@ if __name__ == "__main__":
         [
             "hi there",
             "i'll kill you",
-            "youre cute",
+            "Kill yourself faggot op for reminding me of this shit",
             "My example is touching one foid's ass on purpose when i was in grade 7.",
         ],
         columns=["content"],
